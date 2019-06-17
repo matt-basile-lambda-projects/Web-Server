@@ -54,10 +54,42 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     char response[max_response_size];
 
     // Build HTTP response and store it in response
+	// char *request = "GET /foobar.html HTTP/1.1\n"
+	// 	"Host: www.example.com\n"
+	// 	"Connection: close\n"
+	// 	"X-Header: whatever\n"
+	// 	"X-Header-2: whatever\n\n";
+
+	// char method[200];
+	// char path[8192];
+
+	// sscanf(request, "%s %s", method, path);
+	
+	// printf("method: %s\n", method); // GET
+	// printf("path: %s\n", path);     // /foobar.html
+
+	// printf("%s\n", response);
 
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    // char response[500000];
+	int response_length = strlen(body);
+    // Get current time
+    time_t t1 = time(NULL);
+    struct tm *local = localtime(&t1);
+	sprintf(response, "%s\n"
+            "Date: %s"
+			"Content-Type: %s\n"
+			"Content-Length: %d\n"
+			"Connection: close\n"
+			"\n"
+			"%s",
+			header, 
+            asctime(local),
+            content_type, 
+            response_length, 
+            body);
 
     // Send it all!
     int rv = send(fd, response, response_length, 0);
@@ -182,7 +214,6 @@ int main(void)
 
     // Get a listening socket
     int listenfd = get_listener_socket(PORT);
-
     if (listenfd < 0) {
         fprintf(stderr, "webserver: fatal error getting listening socket\n");
         exit(1);
@@ -195,8 +226,8 @@ int main(void)
     // then goes back to waiting for new connections.
     
     while(1) {
+        resp_404(newfd);
         socklen_t sin_size = sizeof their_addr;
-
         // Parent process will block on the accept() call until someone
         // makes a new connection:
         newfd = accept(listenfd, (struct sockaddr *)&their_addr, &sin_size);
