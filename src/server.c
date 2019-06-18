@@ -52,33 +52,15 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 {
     const int max_response_size = 262144;
     char response[max_response_size];
-
-    // Build HTTP response and store it in response
-	// char *request = "GET /foobar.html HTTP/1.1\n"
-	// 	"Host: www.example.com\n"
-	// 	"Connection: close\n"
-	// 	"X-Header: whatever\n"
-	// 	"X-Header-2: whatever\n\n";
-
-	// char method[200];
-	// char path[8192];
-
-	// sscanf(request, "%s %s", method, path);
-	
-	// printf("method: %s\n", method); // GET
-	// printf("path: %s\n", path);     // /foobar.html
-
-	// printf("%s\n", response);
-
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
     // char response[500000];
-	int response_length = strlen(body);
     // Get current time
     time_t t1 = time(NULL);
     struct tm *local = localtime(&t1);
-	sprintf(response, "%s\n"
+    // int content_length = strlen(body);
+	int response_length = sprintf(response, "%s\n"
             "Date: %s"
 			"Content-Type: %s\n"
 			"Content-Length: %d\n"
@@ -88,12 +70,12 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 			header, 
             asctime(local),
             content_type, 
-            response_length, 
+            content_length, 
             body);
 
     // Send it all!
     int rv = send(fd, response, response_length, 0);
-
+    
     if (rv < 0) {
         perror("send");
     }
@@ -112,9 +94,12 @@ void get_d20(int fd)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    int x = rand() % 20 +1;
+    char s[1024];
+    int resp_len = sprintf(s, "%d\n", x);
 
     // Use send_response() to send it back as text/plain data
-
+     send_response(fd, "HTTP/1.1 200 OK", "text/plain", s, resp_len);
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -154,6 +139,10 @@ void get_file(int fd, struct cache *cache, char *request_path)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+
+
+
+
 }
 
 /**
@@ -176,6 +165,8 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
+    char method[12];
+	char path[8192];
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
@@ -184,20 +175,26 @@ void handle_http_request(int fd, struct cache *cache)
         perror("recv");
         return;
     }
-
-
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-
-    // Read the first two components of the first line of the request 
- 
-    // If GET, handle the get endpoints
-
-    //    Check if it's /d20 and handle that special case
-    //    Otherwise serve the requested file by calling get_file()
-
-
+	sscanf(request, "%s %s",  method, path);
+	printf("method: %s\n", method); // GET
+	printf("path: %s\n", path);     // /foobar.html
+    // // If GET, handle the get endpoints
+    // if (strcmp(method, "GET") == 0) {
+    // //    Check if it's /d20 and handle that special case
+    // //    Otherwise serve the requested file by calling get_file()
+        if(strcmp(method, "GET") == 0){
+            if (strcmp(path, "/d20") == 0) {
+                get_d20(fd);
+            } else{
+                get_file(fd, cache, path);
+            }
+        } else {
+        fprintf(stderr, "unknown request type \"%s\"\n", method);
+        return;
+    }
     // (Stretch) If POST, handle the post request
 }
 
@@ -209,7 +206,7 @@ int main(void)
     int newfd;  // listen on sock_fd, new connection on newfd
     struct sockaddr_storage their_addr; // connector's address information
     char s[INET6_ADDRSTRLEN];
-
+    srand(time(NULL));
     struct cache *cache = cache_create(10, 0);
 
     // Get a listening socket
@@ -226,7 +223,6 @@ int main(void)
     // then goes back to waiting for new connections.
     
     while(1) {
-        resp_404(newfd);
         socklen_t sin_size = sizeof their_addr;
         // Parent process will block on the accept() call until someone
         // makes a new connection:
@@ -235,7 +231,6 @@ int main(void)
             perror("accept");
             continue;
         }
-
         // Print out a message that we got the connection
         inet_ntop(their_addr.ss_family,
             get_in_addr((struct sockaddr *)&their_addr),
@@ -246,7 +241,6 @@ int main(void)
         // listenfd is still listening for new connections.
 
         handle_http_request(newfd, cache);
-
         close(newfd);
     }
 
