@@ -52,10 +52,6 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 {
     const int max_response_size = 262144;
     char response[max_response_size];
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
-    // char response[500000];
     // Get current time
     time_t t1 = time(NULL);
     struct tm *local = localtime(&t1);
@@ -82,27 +78,17 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 
     return rv;
 }
-
-
 /**
  * Send a /d20 endpoint response
  */
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
-    
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
     int x = rand() % 20 +1;
     char s[1024];
     int resp_len = sprintf(s, "%d\n", x);
-
     // Use send_response() to send it back as text/plain data
      send_response(fd, "HTTP/1.1 200 OK", "text/plain", s, resp_len);
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
 }
 
 /**
@@ -125,9 +111,7 @@ void resp_404(int fd)
     }
 
     mime_type = mime_type_get(filepath);
-
     send_response(fd, "HTTP/1.1 404 NOT FOUND", mime_type, filedata->data, filedata->size);
-
     file_free(filedata);
 }
 
@@ -136,9 +120,6 @@ void resp_404(int fd)
  */
 void get_file(int fd, struct cache *cache, char *request_path)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
     char filepath[4096];
     struct file_data *filedata; 
     char *mime_type;
@@ -148,12 +129,11 @@ void get_file(int fd, struct cache *cache, char *request_path)
     filedata = file_load(filepath);
 
     if (filedata == NULL) {
-        fprintf(stderr, "Couldn't find file at: %s\n", filepath);
+        resp_404(fd);
     } 
     
     mime_type = mime_type_get(filepath);
     send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
-
     file_free(filedata);
 }
 
@@ -187,9 +167,6 @@ void handle_http_request(int fd, struct cache *cache)
         perror("recv");
         return;
     }
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
 	sscanf(request, "%s %s",  method, path);
 	printf("method: %s\n", method); // GET
 	printf("path: %s\n", path);     // /foobar.html

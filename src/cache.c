@@ -9,9 +9,16 @@
  */
 struct cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+ struct cache_entry *new_cache_entry = malloc(sizeof(struct cache_entry));
+// char *path;   // Endpoint path--key to the cache
+// char *content_type;
+// int content_length;
+// void *content;
+new_cache_entry->path = strdup(path);
+new_cache_entry->content_type = strdup(content_type);
+new_cache_entry->content = malloc(content_length);
+memcpy(new_cache_entry->content, content, content_length);
+new_cache_entry->content_length = content_length;
 }
 
 /**
@@ -19,9 +26,10 @@ struct cache_entry *alloc_entry(char *path, char *content_type, void *content, i
  */
 void free_entry(struct cache_entry *entry)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+   free(entry->path);
+    free(entry->content_type);
+    free(entry->content);
+    free(entry);
 }
 
 /**
@@ -122,9 +130,15 @@ void cache_free(struct cache *cache)
  */
 void cache_put(struct cache *cache, char *path, char *content_type, void *content, int content_length)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+// Allocate a new cache entry with the passed parameters.
+// Insert the entry at the head of the doubly-linked list.
+// Store the entry in the hashtable as well, indexed by the entry's path.
+// Increment the current size of the cache.
+// If the cache size is greater than the max size:
+// Remove the cache entry at the tail of the linked list.
+// Remove that same entry from the hashtable, using the entry's path and the hashtable_delete function.
+// Free the cache entry.
+// Ensure the size counter for the number of entries in the cache is correct.
 }
 
 /**
@@ -132,7 +146,8 @@ void cache_put(struct cache *cache, char *path, char *content_type, void *conten
  */
 struct cache_entry *cache_get(struct cache *cache, char *path)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+// Attempt to find the cache entry pointer by path in the hash table.
+// If not found, return NULL.
+// Move the cache entry to the head of the doubly-linked list.
+// Return the cache entry pointer.
 }
