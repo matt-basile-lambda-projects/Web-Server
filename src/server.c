@@ -121,17 +121,22 @@ void resp_404(int fd)
 void get_file(int fd, struct cache *cache, char *request_path)
 {
     char filepath[4096];
+    char cache_res[4096];
     struct file_data *filedata; 
     char *mime_type;
 
     // Fetch the 404.html file
     snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
+    struct cache_entry *entry = cache_get(cache, filepath);
+    if(entry != NULL){
+        // Entry in cache send it back w response
+        send_response(fd, "HTTP/1.1 200 OK", entry->content_type, entry->content, entry->content_length);
+        return;
+    }
     filedata = file_load(filepath);
-
     if (filedata == NULL) {
         resp_404(fd);
-    } 
-    
+    }
     mime_type = mime_type_get(filepath);
     send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
     file_free(filedata);
